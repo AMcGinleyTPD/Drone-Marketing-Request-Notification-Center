@@ -197,25 +197,33 @@
 
 			// Initialize MSAL
 			msalInstance.initialize().then(() => {
-				// Check for existing accounts
-				const accounts = msalInstance.getAllAccounts();
-				if (accounts.length > 0) {
-					isAuthenticated = true;
-					showApp();
-				} else {
-					// Check if we're returning from a redirect
-					msalInstance.handleRedirectPromise().then((response) => {
-						if (response) {
+				// MUST handle redirect promise FIRST before checking accounts
+				msalInstance.handleRedirectPromise().then((response) => {
+					if (response) {
+						// User just authenticated via redirect
+						isAuthenticated = true;
+						showApp();
+					} else {
+						// No redirect response, check for existing accounts
+						const accounts = msalInstance.getAllAccounts();
+						if (accounts.length > 0) {
 							isAuthenticated = true;
 							showApp();
 						} else {
 							showLogin();
 						}
-					}).catch((error) => {
-						console.error("Error handling redirect:", error);
+					}
+				}).catch((error) => {
+					console.error("Error handling redirect:", error);
+					// On error, check for accounts anyway
+					const accounts = msalInstance.getAllAccounts();
+					if (accounts.length > 0) {
+						isAuthenticated = true;
+						showApp();
+					} else {
 						showLogin();
-					});
-				}
+					}
+				});
 			}).catch((error) => {
 				console.error("MSAL initialization error:", error);
 				showLogin();
@@ -252,5 +260,7 @@
 						alert("Login failed. Please try again.");
 					});
 				});
+			});
+		</script></body></html>
 			});
 		</script></body></html>
